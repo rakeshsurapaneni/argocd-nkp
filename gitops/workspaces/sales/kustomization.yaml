@@ -1,0 +1,12 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../base
+patches:
+  - target:
+      kind: Workspace
+      name: workspace-template
+    patch: |-
+      - {op: replace, path: /metadata/name, value: sales}
+      - {op: replace, path: /spec/namespaceName, value: sales}
+      - {op: replace, path: /metadata/annotations/kommander.mesosphere.io~1display-name, value: "Sales Dept"}

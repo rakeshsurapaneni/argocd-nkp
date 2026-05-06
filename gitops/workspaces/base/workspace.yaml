@@ -1,0 +1,9 @@
+apiVersion: workspaces.kommander.mesosphere.io/v1alpha1
+kind: Workspace
+metadata:
+  name: workspace-template
+  annotations:
+    kommander.mesosphere.io/description: ""
+    kommander.mesosphere.io/display-name: workspace-template
+spec:
+  namespaceName: workspace-template

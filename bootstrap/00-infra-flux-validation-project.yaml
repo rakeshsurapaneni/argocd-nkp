@@ -1,0 +1,15 @@
+apiVersion: workspaces.kommander.mesosphere.io/v1alpha1
+kind: Project
+metadata:
+  annotations:
+    kommander.mesosphere.io/description: ""
+    kommander.mesosphere.io/display-name: infra-flux-validation
+  name: infra-flux-validation
+  namespace: kommander
+spec:
+  namespaceName: infra-flux-validation
+  placement:
+    clusters:
+    - name: host-cluster
+  workspaceRef:
+    name: kommander-workspace

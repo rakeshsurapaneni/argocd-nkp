@@ -1,0 +1,29 @@
+# ArgoCD App of Apps
+# Apply this after bootstrapping ArgoCD to seed all NKP child Applications.
+# kubectl apply -f bootstrap/04-argocd-root-app.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: nkp-infra-apps
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  annotations:
+    # Wave 0 so this root app is synced before everything else
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  project: nkp-infra
+  source:
+    repoURL: https://github.com/rakeshsurapaneni/argocd-nkp
+    targetRevision: main
+    path: argocd/applications
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=false
+      - ServerSideApply=true

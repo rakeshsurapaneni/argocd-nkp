@@ -1,0 +1,109 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../../base
+  - env-values.yaml
+patches:
+  - target: {kind: ExternalSecret, name: cluster-template-pc-credentials}
+    patch: |-
+      - {op: replace, path: /metadata/name, value: it-cluster-pc-credentials}
+      - {op: replace, path: /metadata/namespace, value: it}
+      - {op: replace, path: /spec/target/name, value: it-cluster-pc-credentials}
+  - target: {kind: ExternalSecret, name: cluster-template-pc-credentials-for-csi}
+    patch: |-
+      - {op: replace, path: /metadata/name, value: it-cluster-pc-credentials-for-csi}
+      - {op: replace, path: /metadata/namespace, value: it}
+      - {op: replace, path: /spec/target/name, value: it-cluster-pc-credentials-for-csi}
+  - target: {kind: ExternalSecret, name: cluster-template-pc-credentials-for-konnector-agent}
+    patch: |-
+      - {op: replace, path: /metadata/name, value: it-cluster-pc-credentials-for-konnector-agent}
+      - {op: replace, path: /metadata/namespace, value: it}
+      - {op: replace, path: /spec/target/name, value: it-cluster-pc-credentials-for-konnector-agent}
+  - target: {kind: Cluster, name: cluster-template}
+    patch: |-
+      - {op: replace, path: /metadata/name, value: it-cluster}
+      - {op: replace, path: /metadata/namespace, value: it}
+  - target: {kind: Cluster, name: cluster-template}
+    path: cluster-patch.yaml
+
+replacements:
+  - source:
+      kind: ConfigMap
+      name: cluster-env-values
+      fieldPath: data.CONTROL_PLANE_VIP
+    targets:
+      - select:
+          kind: Cluster
+          name: it-cluster
+        fieldPaths:
+          - spec.controlPlaneEndpoint.host
+          - spec.topology.variables.[name=clusterConfig].value.nutanix.controlPlaneEndpoint.host
+
+  - source:
+      kind: ConfigMap
+      name: cluster-env-values
+      fieldPath: data.LB_IP_START
+    targets:
+      - select:
+          kind: Cluster
+          name: it-cluster
+        fieldPaths:
+          - spec.topology.variables.[name=clusterConfig].value.addons.serviceLoadBalancer.configuration.addressRanges.0.start
+
+  - source:
+      kind: ConfigMap
+      name: cluster-env-values
+      fieldPath: data.LB_IP_END
+    targets:
+      - select:
+          kind: Cluster
+          name: it-cluster
+        fieldPaths:
+          - spec.topology.variables.[name=clusterConfig].value.addons.serviceLoadBalancer.configuration.addressRanges.0.end
+
+  - source:
+      kind: ConfigMap
+      name: cluster-env-values
+      fieldPath: data.PC_URL
+    targets:
+      - select:
+          kind: Cluster
+          name: it-cluster
+        fieldPaths:
+          - spec.topology.variables.[name=clusterConfig].value.nutanix.prismCentralEndpoint.url
+
+  - source:
+      kind: ConfigMap
+      name: cluster-env-values
+      fieldPath: data.PRISM_ELEMENT
+    targets:
+      - select:
+          kind: Cluster
+          name: it-cluster
+        fieldPaths:
+          - spec.topology.variables.[name=clusterConfig].value.controlPlane.nutanix.machineDetails.cluster.name
+          - spec.topology.workers.machineDeployments.[name=md-0].variables.overrides.[name=workerConfig].value.nutanix.machineDetails.cluster.name
+
+  - source:
+      kind: ConfigMap
+      name: cluster-env-values
+      fieldPath: data.OS_IMAGE_NAME
+    targets:
+      - select:
+          kind: Cluster
+          name: it-cluster
+        fieldPaths:
+          - spec.topology.variables.[name=clusterConfig].value.controlPlane.nutanix.machineDetails.image.name
+          - spec.topology.workers.machineDeployments.[name=md-0].variables.overrides.[name=workerConfig].value.nutanix.machineDetails.image.name
+
+  - source:
+      kind: ConfigMap
+      name: cluster-env-values
+      fieldPath: data.NETWORK_NAME
+    targets:
+      - select:
+          kind: Cluster
+          name: it-cluster
+        fieldPaths:
+          - spec.topology.variables.[name=clusterConfig].value.controlPlane.nutanix.machineDetails.subnets.0.name
+          - spec.topology.workers.machineDeployments.[name=md-0].variables.overrides.[name=workerConfig].value.nutanix.machineDetails.subnets.0.name

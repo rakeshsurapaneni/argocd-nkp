@@ -1,0 +1,151 @@
+apiVersion: cluster.x-k8s.io/v1beta1
+kind: Cluster
+metadata:
+  name: sales-cluster
+  namespace: sales
+  labels:
+    cluster.x-k8s.io/provider: nutanix
+    konvoy.d2iq.io/cluster-name: sales-cluster
+    konvoy.d2iq.io/provider: nutanix
+    org: sales
+spec:
+  clusterNetwork:
+    pods:
+      cidrBlocks:
+        - 192.168.0.0/16
+    services:
+      cidrBlocks:
+        - 10.96.0.0/12
+  controlPlaneEndpoint:
+    host: CONTROL_PLANE_VIP
+    port: 6443
+  topology:
+    class: nkp-nutanix-v2.17.1
+    controlPlane:
+      metadata: {}
+      replicas: 3
+    version: v1.34.3
+    variables:
+      - name: clusterConfig
+        value:
+          addons:
+            ccm:
+              credentials:
+                secretRef:
+                  name: sales-cluster-pc-credentials
+              strategy: HelmAddon
+            clusterAutoscaler:
+              strategy: HelmAddon
+            cni:
+              provider: Cilium
+              strategy: HelmAddon
+            cosi:
+              strategy: HelmAddon
+            csi:
+              defaultStorage:
+                provider: nutanix
+                storageClassConfig: volume
+              providers:
+                nutanix:
+                  credentials:
+                    secretRef:
+                      name: sales-cluster-pc-credentials-for-csi
+                  storageClassConfigs:
+                    volume:
+                      allowExpansion: true
+                      parameters:
+                        csi.storage.k8s.io/fstype: ext4
+                        description: CSI StorageClass nutanix-volume for sales-cluster
+                        flashMode: DISABLED
+                        hypervisorAttached: ENABLED
+                        storageContainer: SelfServiceContainer
+                        storageType: NutanixVolumes
+                      reclaimPolicy: Delete
+                      volumeBindingMode: Immediate
+                  strategy: HelmAddon
+              snapshotController:
+                strategy: HelmAddon
+            konnectorAgent:
+              credentials:
+                secretRef:
+                  name: sales-cluster-pc-credentials-for-konnector-agent
+            nfd:
+              strategy: HelmAddon
+            serviceLoadBalancer:
+              configuration:
+                addressRanges:
+                  - start: LB_IP_START
+                    end: LB_IP_END
+              provider: MetalLB
+          controlPlane:
+            autoRenewCertificates:
+              daysBeforeExpiry: 180
+            nodeRegistration:
+              ignorePreflightErrors:
+                - SystemVerification
+            nutanix:
+              machineDetails:
+                bootType: uefi
+                cluster:
+                  name: PRISM_ELEMENT
+                  type: name
+                image:
+                  name: OS_IMAGE_NAME
+                  type: name
+                memorySize: 16Gi
+                subnets:
+                  - name: NETWORK_NAME
+                    type: name
+                systemDiskSize: 80Gi
+                vcpuSockets: 4
+                vcpusPerSocket: 1
+          dns:
+            coreDNS: {}
+          encryptionAtRest:
+            providers:
+              - secretbox: {}
+          kubeProxy:
+            mode: disabled
+          nutanix:
+            controlPlaneEndpoint:
+              host: CONTROL_PLANE_VIP
+              port: 6443
+              virtualIP:
+                provider: KubeVIP
+            prismCentralEndpoint:
+              credentials:
+                secretRef:
+                  name: sales-cluster-pc-credentials
+              insecure: true
+              url: PC_URL
+    workers:
+      machineDeployments:
+        - class: default-worker
+          metadata:
+            annotations:
+              cluster.x-k8s.io/cluster-api-autoscaler-node-group-max-size: "4"
+              cluster.x-k8s.io/cluster-api-autoscaler-node-group-min-size: "4"
+          name: md-0
+          variables:
+            overrides:
+              - name: workerConfig
+                value:
+                  nodeRegistration:
+                    ignorePreflightErrors:
+                      - SystemVerification
+                  nutanix:
+                    machineDetails:
+                      bootType: uefi
+                      cluster:
+                        name: PRISM_ELEMENT
+                        type: name
+                      image:
+                        name: OS_IMAGE_NAME
+                        type: name
+                      memorySize: 32Gi
+                      subnets:
+                        - name: NETWORK_NAME
+                          type: name
+                      systemDiskSize: 80Gi
+                      vcpuSockets: 8
+                      vcpusPerSocket: 1

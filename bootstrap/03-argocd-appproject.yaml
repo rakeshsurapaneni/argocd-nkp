@@ -1,0 +1,68 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: nkp-infra
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  description: "NKP Infrastructure - manages workload clusters and workspaces via ArgoCD"
+
+  # Allow only this Git repository as source
+  sourceRepos:
+    - https://github.com/rakeshsurapaneni/argocd-nkp
+
+  # Allow deployment to the management cluster across all NKP namespaces
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: "*"
+
+  # Cluster-scoped resources ArgoCD is allowed to manage
+  clusterResourceWhitelist:
+    - group: "workspaces.kommander.mesosphere.io"
+      kind: Workspace
+    - group: "cluster.x-k8s.io"
+      kind: Cluster
+    - group: "rbac.authorization.k8s.io"
+      kind: ClusterRole
+    - group: "rbac.authorization.k8s.io"
+      kind: ClusterRoleBinding
+    - group: "*"
+      kind: Namespace
+
+  # Namespace-scoped resources ArgoCD is allowed to manage
+  namespaceResourceWhitelist:
+    - group: "external-secrets.io"
+      kind: ExternalSecret
+    - group: "external-secrets.io"
+      kind: SecretStore
+    - group: "external-secrets.io"
+      kind: ClusterSecretStore
+    - group: "rbac.authorization.k8s.io"
+      kind: Role
+    - group: "rbac.authorization.k8s.io"
+      kind: RoleBinding
+    - group: ""
+      kind: ServiceAccount
+    - group: ""
+      kind: ConfigMap
+    - group: "cluster.x-k8s.io"
+      kind: Cluster
+    - group: "kommander.mesosphere.io"
+      kind: "*"
+    - group: "workspaces.kommander.mesosphere.io"
+      kind: "*"
+    - group: "tokens.kommander.mesosphere.io"
+      kind: "*"
+    - group: "*"
+      kind: "*"
+
+  # Sync windows - allow syncing at any time
+  syncWindows: []
+
+  # Roles within this project
+  roles:
+    - name: admin
+      description: "Full admin access to nkp-infra project"
+      policies:
+        - p, proj:nkp-infra:admin, applications, *, nkp-infra/*, allow

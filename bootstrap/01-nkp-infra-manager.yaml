@@ -1,0 +1,57 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: nkp-argocd-manager-role
+rules:
+  # NKP / Kommander Specific Resources
+  - apiGroups:
+      - "workspaces.kommander.mesosphere.io"
+      - "projects.kommander.mesosphere.io"
+      - "kommander.mesosphere.io"
+    resources:
+      - "workspaces"
+      - "projects"
+      - "appdeployments"
+      - "kommanderclusters"
+    verbs: ["*"]
+
+  # Cluster API (CAPI) - For deploying the actual clusters
+  - apiGroups:
+      - "cluster.x-k8s.io"
+      - "infrastructure.cluster.x-k8s.io"
+      - "controlplane.cluster.x-k8s.io"
+      - "bootstrap.cluster.x-k8s.io"
+    resources: ["*"]
+    verbs: ["*"]
+
+  # Cross-project / Federated resources often used in NKP
+  - apiGroups: ["tokens.kommander.mesosphere.io"]
+    resources: ["*"]
+    verbs: ["*"]
+
+  # External Secrets Operator resources
+  - apiGroups: ["external-secrets.io"]
+    resources: ["*"]
+    verbs: ["*"]
+
+  # Workspace-scoped identities and RBAC needed by ESO SecretStores
+  - apiGroups: [""]
+    resources: ["serviceaccounts", "configmaps"]
+    verbs: ["*"]
+  - apiGroups: ["rbac.authorization.k8s.io"]
+    resources: ["roles", "rolebindings", "clusterroles", "clusterrolebindings"]
+    verbs: ["*"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: nkp-argocd-manager-binding
+subjects:
+- kind: ServiceAccount
+  name: argocd-application-controller
+  namespace: argocd
+roleRef:
+  kind: ClusterRole
+  name: nkp-argocd-manager-role
+  apiGroup: rbac.authorization.k8s.io

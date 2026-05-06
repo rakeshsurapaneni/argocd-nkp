@@ -1,0 +1,28 @@
+# Wave 0 - Workspaces must be created first so namespaces exist for all other resources.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: nkp-workspaces
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  project: nkp-infra
+  source:
+    repoURL: https://github.com/rakeshsurapaneni/argocd-nkp
+    targetRevision: main
+    path: gitops/workspaces
+  destination:
+    server: https://kubernetes.default.svc
+    # Workspace CRDs are cluster-scoped; namespace is used as a fallback only
+    namespace: kommander
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - ApplyOutOfSyncOnly=true

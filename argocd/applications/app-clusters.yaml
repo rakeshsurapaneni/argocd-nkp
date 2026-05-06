@@ -1,0 +1,30 @@
+# Wave 3 - CAPI Cluster objects are created last, after workspaces, secret stores,
+# and credential secrets are all in place.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: nkp-clusters
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  project: nkp-infra
+  source:
+    repoURL: https://github.com/rakeshsurapaneni/argocd-nkp
+    targetRevision: main
+    path: gitops/clusters
+  destination:
+    server: https://kubernetes.default.svc
+    # CAPI Cluster objects deploy to workspace namespaces.
+    # Each resource has its namespace set explicitly in the overlay patches.
+    namespace: engineering
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - ApplyOutOfSyncOnly=true

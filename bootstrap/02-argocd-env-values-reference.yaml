@@ -1,0 +1,19 @@
+# NOTE: This ConfigMap is a REFERENCE ONLY document showing the environment
+# variables used across all cluster overlays.
+# In the ArgoCD setup, actual values are defined per-cluster in:
+#   gitops/clusters/overlays/<workspace>/<cluster-name>/env-values.yaml
+# and substituted via Kustomize replacements (not FluxCD postBuild).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cluster-env-values-reference
+  namespace: argocd
+data:
+  # Override these per cluster in the overlay's env-values.yaml
+  CONTROL_PLANE_VIP: "REPLACE_WITH_CONTROL_PLANE_VIP"     # e.g. 10.x.x.137
+  LB_IP_START: "REPLACE_WITH_LB_IP_START"                 # e.g. 10.x.x.138
+  LB_IP_END: "REPLACE_WITH_LB_IP_END"                     # e.g. 10.x.x.140
+  PC_URL: "REPLACE_WITH_PRISM_CENTRAL_URL"                 # e.g. https://10.x.x.7:9440
+  PRISM_ELEMENT: "REPLACE_WITH_PRISM_ELEMENT_CLUSTER_NAME" # Nutanix AHV cluster name
+  OS_IMAGE_NAME: "REPLACE_WITH_OS_IMAGE_NAME"              # e.g. nkp-ubuntu-22.04-v1.34.3
+  NETWORK_NAME: "REPLACE_WITH_NUTANIX_SUBNET_NAME"         # e.g. VM-Network
